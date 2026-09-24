@@ -10,6 +10,8 @@
  */
 
 @theme inline {
+  --color-present: var(--present);
+  --color-present-foreground: var(--present-foreground);
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
   --radius-sm: calc(var(--radius) - 3px);
@@ -57,6 +59,8 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.14 0 0);
   --primary: oklch(0.14 0 0);
+  --present: oklch(0.93 0.07 150);
+  --present-foreground: oklch(0.35 0.1 150);
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.14 0 0);
@@ -87,6 +91,8 @@
   --popover: oklch(0.18 0 0);
   --popover-foreground: oklch(0.98 0 0);
   --primary: oklch(0.98 0 0);
+  --present: oklch(0.32 0.07 150);
+  --present-foreground: oklch(0.9 0.08 150);
   --primary-foreground: oklch(0.14 0 0);
   --secondary: oklch(0.24 0 0);
   --secondary-foreground: oklch(0.98 0 0);

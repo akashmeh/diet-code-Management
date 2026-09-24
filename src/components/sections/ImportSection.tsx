@@ -1,4 +1,3 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -14,25 +13,8 @@ import {
 } from "@/lib/spreadsheet";
 import { PageHeader, Panel } from "@/components/ui-bits";
 
-export const Route = createFileRoute("/_authenticated/import")({
-  head: () => ({
-    meta: [
-      { title: "Import Teams · DIET CODE Organizer" },
-      {
-        name: "description",
-        content: "Upload the DIET CODE registration spreadsheet to create teams and QR passes.",
-      },
-      { property: "og:title", content: "Import Teams · DIET CODE Organizer" },
-      { property: "og:description", content: "Excel and CSV team import for DIET CODE." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: ImportPage,
-});
 
-function ImportPage() {
-  const navigate = useNavigate();
+export function ImportSection() {
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -85,7 +67,6 @@ function ImportPage() {
 
       await queryClient.invalidateQueries();
       toast.success(`${data?.length ?? payload.length} teams imported with QR codes.`);
-      navigate({ to: "/teams" });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Import failed.");
     } finally {

@@ -166,3 +166,20 @@ export function formatDateTime(value: string | null | undefined) {
 export function memberNames(team: Team) {
   return (team.members ?? []).map((m) => m.name).filter(Boolean);
 }
+
+/** Manually mark a team present (now) or absent. Absent also clears attendance scans so the QR can be scanned again. */
+export async function setTeamPresent(teamId: string, present: boolean) {
+  if (!present) {
+    const { error: delError } = await supabase
+      .from("scans")
+      .delete()
+      .eq("team_uuid", teamId)
+      .eq("scan_type", "attendance");
+    if (delError) throw delError;
+  }
+  const { error } = await supabase
+    .from("teams")
+    .update({ checked_in_at: present ? new Date().toISOString() : null })
+    .eq("id", teamId);
+  if (error) throw error;
+}

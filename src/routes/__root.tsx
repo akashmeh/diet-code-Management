@@ -81,13 +81,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "DIET CODE Organizer Console" },
       {
         name: "description",
-        content: "Organizer console for DIET CODE by SKETCH, SRM Ramapuram.",
+        content: "Organizer console for DIET CODE by SKETCH.",
       },
-      { name: "author", content: "SKETCH, SRM Ramapuram" },
+      { name: "author", content: "SKETCH" },
       { property: "og:title", content: "DIET CODE Organizer Console" },
       {
         property: "og:description",
-        content: "Organizer console for DIET CODE by SKETCH, SRM Ramapuram.",
+        content: "Organizer console for DIET CODE by SKETCH.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

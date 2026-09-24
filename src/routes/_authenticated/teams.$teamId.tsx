@@ -57,7 +57,7 @@ function TeamDetailPage() {
     return (
       <>
         <PageHeader title="Team not found" />
-        <Link to="/teams" className="text-sm underline">
+        <Link to="/dashboard" className="text-sm underline">
           Back to teams
         </Link>
       </>
@@ -70,7 +70,7 @@ function TeamDetailPage() {
         description={`Team ID ${team.team_id}`}
         actions={
           <Link
-            to="/teams"
+            to="/dashboard"
             className="rounded-md border border-border px-3 py-2 text-sm hover:bg-accent"
           >
             Back to teams
