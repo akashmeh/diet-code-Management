@@ -216,7 +216,7 @@ export function ScannerSection() {
         )}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="max-w-xl">
         <Panel className="px-5 py-5">
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex overflow-hidden rounded-md border border-border">
