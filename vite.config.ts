@@ -12,4 +12,9 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    optimizeDeps: {
+      include: ["@radix-ui/react-dialog", "html5-qrcode", "qrcode", "jszip", "xlsx", "file-saver"],
+    },
+  },
 });
