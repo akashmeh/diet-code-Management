@@ -14,7 +14,132 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      checkpoints: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          position: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          position?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          position?: number
+        }
+        Relationships: []
+      }
+      scans: {
+        Row: {
+          checkpoint_id: string | null
+          id: string
+          is_override: boolean
+          organizer_email: string | null
+          organizer_id: string | null
+          scan_type: string
+          scanned_at: string
+          team_uuid: string
+        }
+        Insert: {
+          checkpoint_id?: string | null
+          id?: string
+          is_override?: boolean
+          organizer_email?: string | null
+          organizer_id?: string | null
+          scan_type: string
+          scanned_at?: string
+          team_uuid: string
+        }
+        Update: {
+          checkpoint_id?: string | null
+          id?: string
+          is_override?: boolean
+          organizer_email?: string | null
+          organizer_id?: string | null
+          scan_type?: string
+          scanned_at?: string
+          team_uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scans_checkpoint_id_fkey"
+            columns: ["checkpoint_id"]
+            isOneToOne: false
+            referencedRelation: "checkpoints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scans_team_uuid_fkey"
+            columns: ["team_uuid"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          captain_email: string | null
+          captain_name: string | null
+          captain_phone: string | null
+          checked_in_at: string | null
+          created_at: string
+          department: string | null
+          id: string
+          members: Json
+          qr_token: string
+          register_number: string | null
+          registration_status: string
+          team_id: string
+          team_name: string
+          team_size: number | null
+          updated_at: string
+        }
+        Insert: {
+          captain_email?: string | null
+          captain_name?: string | null
+          captain_phone?: string | null
+          checked_in_at?: string | null
+          created_at?: string
+          department?: string | null
+          id?: string
+          members?: Json
+          qr_token?: string
+          register_number?: string | null
+          registration_status?: string
+          team_id: string
+          team_name: string
+          team_size?: number | null
+          updated_at?: string
+        }
+        Update: {
+          captain_email?: string | null
+          captain_name?: string | null
+          captain_phone?: string | null
+          checked_in_at?: string | null
+          created_at?: string
+          department?: string | null
+          id?: string
+          members?: Json
+          qr_token?: string
+          register_number?: string | null
+          registration_status?: string
+          team_id?: string
+          team_name?: string
+          team_size?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
