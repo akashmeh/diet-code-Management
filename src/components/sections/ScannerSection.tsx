@@ -209,7 +209,7 @@ export function ScannerSection() {
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-3 text-sm">
-        <StatusPill tone={online ? "solid" : undefined}>{online ? "Online" : "Offline"}</StatusPill>
+        <StatusPill tone={online ? "solid" : "muted"}>{online ? "Online" : "Offline"}</StatusPill>
         {!online && <span className="text-muted-foreground">Scans are saved on this device and sync automatically.</span>}
         {queued > 0 && (
           <span className="font-mono text-xs text-muted-foreground">{queued} scan{queued > 1 ? "s" : ""} waiting to sync</span>
