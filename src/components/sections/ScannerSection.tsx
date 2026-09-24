@@ -16,6 +16,7 @@ import {
 } from "@/lib/dietcode";
 import { cacheTeams, cachedTeams, findCachedTeam, getQueue, isOnline, queueScan, syncQueue } from "@/lib/offline";
 import { PageHeader, Panel, StatusPill } from "@/components/ui-bits";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
 const REGION_ID = "dietcode-scanner-region";
