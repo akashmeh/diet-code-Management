@@ -1,9 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 // Single shared organizer account; organizers only type the password.
 const ORGANIZER_EMAIL = "organizer@dietcode.app";
+
+// The auth client is large — load it lazily so this page renders instantly.
+async function getClient() {
+  const { supabase } = await import("@/integrations/supabase/client");
+  return supabase;
+}
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -13,7 +18,7 @@ export const Route = createFileRoute("/auth")({
       { property: "og:title", content: "Organizer sign in · DIET CODE" },
       { property: "og:description", content: "Organizer access to the DIET CODE event console." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuthPage,
@@ -22,13 +27,25 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
+  const [checking, setChecking] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
-    });
+    let cancelled = false;
+    getClient()
+      .then((supabase) => supabase.auth.getSession())
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (data.session) navigate({ to: "/dashboard", replace: true });
+        else setChecking(false);
+      })
+      .catch(() => {
+        if (!cancelled) setChecking(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
 
   async function submit(event: React.FormEvent) {
@@ -36,6 +53,7 @@ function AuthPage() {
     setBusy(true);
     setError(null);
     try {
+      const supabase = await getClient();
       const { error: signInError } = await supabase.auth.signInWithPassword({ email: ORGANIZER_EMAIL, password });
       if (signInError) throw new Error("Wrong password.");
       navigate({ to: "/dashboard", replace: true });
@@ -67,6 +85,11 @@ function AuthPage() {
         >
           {busy ? "Please wait…" : "Enter"}
         </button>
+        {checking && (
+          <p className="text-center text-xs text-muted-foreground" role="status">
+            Checking sign-in…
+          </p>
+        )}
       </form>
     </div>
   );
