@@ -16,6 +16,7 @@ import {
 } from "@/lib/dietcode";
 import { cacheTeams, cachedTeams, findCachedTeam, getQueue, isOnline, queueScan, syncQueue } from "@/lib/offline";
 import { PageHeader, Panel, StatusPill } from "@/components/ui-bits";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
 const REGION_ID = "dietcode-scanner-region";
@@ -216,7 +217,7 @@ export function ScannerSection() {
         )}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="max-w-xl">
         <Panel className="px-5 py-5">
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex overflow-hidden rounded-md border border-border">
@@ -307,18 +308,26 @@ export function ScannerSection() {
           </form>
         </Panel>
 
-        <Panel className="px-5 py-5">
-          <h2 className="text-sm font-semibold">Scan result</h2>
+      </div>
+
+      <Dialog
+        open={Boolean(team || scanError)}
+        onOpenChange={(next) => {
+          if (!next) {
+            setTeam(null);
+            setScanError(null);
+          }
+        }}
+      >
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold">Scan result</DialogTitle>
+          </DialogHeader>
 
           {scanError && (
-            <p className="mt-4 rounded-md border border-foreground px-3 py-2 text-sm">{scanError}</p>
+            <p className="rounded-md border border-foreground px-3 py-2 text-sm">{scanError}</p>
           )}
 
-          {!team && !scanError && (
-            <p className="mt-6 text-sm text-muted-foreground">
-              Waiting for a scan. Team details will appear here.
-            </p>
-          )}
 
           {team && (
             <div className="mt-4">
@@ -383,8 +392,8 @@ export function ScannerSection() {
               </div>
             </div>
           )}
-        </Panel>
-      </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
