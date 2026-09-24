@@ -44,9 +44,11 @@ export function readSheet(buffer: ArrayBuffer): { headers: string[]; rows: Sheet
   const sheet = workbook.Sheets[sheetName]!;
   const rows = XLSX.utils.sheet_to_json<SheetRow>(sheet, { defval: null, raw: false });
   const headerMatrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: false });
+  // Keep header strings exactly as they appear so row lookups match, even when
+  // the sheet has trailing spaces in a header cell.
   const headers = ((headerMatrix[0] ?? []) as unknown[])
-    .map((h) => String(h ?? "").trim())
-    .filter(Boolean);
+    .map((h) => String(h ?? ""))
+    .filter((h) => h.trim().length > 0);
   return { headers, rows };
 }
 
