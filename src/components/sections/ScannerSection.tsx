@@ -5,6 +5,7 @@ import { Html5Qrcode } from "html5-qrcode";
 import {
   DuplicateScanError,
   fetchCheckpoints,
+  fetchTeams,
   fetchTeamByToken,
   fetchTeamScans,
   formatDateTime,
@@ -13,6 +14,7 @@ import {
   recordScan,
   type Team,
 } from "@/lib/dietcode";
+import { cacheTeams, cachedTeams, findCachedTeam, getQueue, isOnline, queueScan, syncQueue } from "@/lib/offline";
 import { PageHeader, Panel, StatusPill } from "@/components/ui-bits";
 
 
@@ -23,7 +25,7 @@ export function ScannerSection() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const busyRef = useRef(false);
 
-  const checkpoints = useQuery({ queryKey: ["checkpoints"], queryFn: fetchCheckpoints });
+  const checkpoints = useQuery({ queryKey: ["checkpoints"], queryFn: fetchCheckpoints, enabled: typeof navigator === "undefined" || navigator.onLine });
   const [mode, setMode] = useState<"attendance" | "checkpoint">("attendance");
   const [checkpointId, setCheckpointId] = useState<string>("");
   const [scanning, setScanning] = useState(false);
@@ -41,6 +43,43 @@ export function ScannerSection() {
     queryFn: () => fetchTeamScans(team!.id),
     enabled: Boolean(team),
   });
+
+  const [online, setOnline] = useState(true);
+  const [queued, setQueued] = useState(0);
+
+  useEffect(() => {
+    const refresh = () => setQueued(getQueue().length);
+    const doSync = async () => {
+      const n = await syncQueue().catch(() => 0);
+      refresh();
+      if (n > 0) {
+        toast.success(`Synced ${n} offline scan${n > 1 ? "s" : ""}.`);
+        void queryClient.invalidateQueries();
+      }
+    };
+    const onOnline = () => {
+      setOnline(true);
+      void doSync();
+    };
+    const onOffline = () => setOnline(false);
+    setOnline(isOnline());
+    refresh();
+    // warm the offline team cache
+    if (isOnline()) {
+      fetchTeams().then(cacheTeams).catch(() => undefined);
+      void doSync();
+    }
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    window.addEventListener("dietcode-queue", refresh);
+    const timer = setInterval(() => void doSync(), 20000);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+      window.removeEventListener("dietcode-queue", refresh);
+      clearInterval(timer);
+    };
+  }, [queryClient]);
 
   useEffect(() => {
     return () => {
@@ -63,7 +102,21 @@ export function ScannerSection() {
         setScanError("Invalid QR code — this is not a DIET CODE team pass.");
         return;
       }
-      const found = await fetchTeamByToken(token);
+      let found: Team | null = null;
+      if (isOnline()) {
+        try {
+          found = await fetchTeamByToken(token);
+        } catch {
+          found = findCachedTeam(token);
+        }
+      } else {
+        found = findCachedTeam(token);
+        if (!found && cachedTeams().length === 0) {
+          setTeam(null);
+          setScanError("Offline and no saved team list yet. Open this page once while online.");
+          return;
+        }
+      }
       if (!found) {
         setTeam(null);
         setScanError("Invalid QR code — no team matches this token.");
@@ -111,6 +164,17 @@ export function ScannerSection() {
 
   async function submitScan(override: boolean) {
     if (!team) return;
+    if (!isOnline()) {
+      try {
+        const at = queueScan({ team, type: mode, checkpointId: mode === "checkpoint" ? checkpointId : null, override });
+        if (mode === "attendance" && !team.checked_in_at) setTeam({ ...team, checked_in_at: at });
+        toast.success(`Saved offline — ${team.team_name}. Will sync when back online.`);
+      } catch (caught) {
+        if (caught instanceof DuplicateScanError) setScanError(`${caught.message} Use "Record anyway" to override.`);
+        else toast.error("Could not save the scan offline.");
+      }
+      return;
+    }
     try {
       await recordScan({
         team,
@@ -143,6 +207,14 @@ export function ScannerSection() {
         title="Scanner"
         description="Point the camera at a team QR pass, then check in or record a checkpoint."
       />
+
+      <div className="mb-4 flex flex-wrap items-center gap-3 text-sm">
+        <StatusPill tone={online ? "solid" : undefined}>{online ? "Online" : "Offline"}</StatusPill>
+        {!online && <span className="text-muted-foreground">Scans are saved on this device and sync automatically.</span>}
+        {queued > 0 && (
+          <span className="font-mono text-xs text-muted-foreground">{queued} scan{queued > 1 ? "s" : ""} waiting to sync</span>
+        )}
+      </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Panel className="px-5 py-5">
