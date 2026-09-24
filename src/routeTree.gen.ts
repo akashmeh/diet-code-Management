@@ -12,9 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
+import { Route as AuthenticatedCheckpointsRouteImport } from './routes/_authenticated/checkpoints'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedExportRouteImport } from './routes/_authenticated/export'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
 import { Route as AuthenticatedQrCodesRouteImport } from './routes/_authenticated/qr-codes'
+import { Route as AuthenticatedScanHistoryRouteImport } from './routes/_authenticated/scan-history'
 import { Route as AuthenticatedScannerRouteImport } from './routes/_authenticated/scanner'
 import { Route as AuthenticatedTeamsRouteImport } from './routes/_authenticated/teams'
 import { Route as AuthenticatedTeamsTeamIdRouteImport } from './routes/_authenticated/teams.$teamId'
@@ -33,9 +37,25 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAttendanceRoute = AuthenticatedAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCheckpointsRoute =
+  AuthenticatedCheckpointsRouteImport.update({
+    id: '/checkpoints',
+    path: '/checkpoints',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedExportRoute = AuthenticatedExportRouteImport.update({
+  id: '/export',
+  path: '/export',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
@@ -48,6 +68,12 @@ const AuthenticatedQrCodesRoute = AuthenticatedQrCodesRouteImport.update({
   path: '/qr-codes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedScanHistoryRoute =
+  AuthenticatedScanHistoryRouteImport.update({
+    id: '/scan-history',
+    path: '/scan-history',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedScannerRoute = AuthenticatedScannerRouteImport.update({
   id: '/scanner',
   path: '/scanner',
@@ -68,9 +94,13 @@ const AuthenticatedTeamsTeamIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/attendance': typeof AuthenticatedAttendanceRoute
+  '/checkpoints': typeof AuthenticatedCheckpointsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/export': typeof AuthenticatedExportRoute
   '/import': typeof AuthenticatedImportRoute
   '/qr-codes': typeof AuthenticatedQrCodesRoute
+  '/scan-history': typeof AuthenticatedScanHistoryRoute
   '/scanner': typeof AuthenticatedScannerRoute
   '/teams': typeof AuthenticatedTeamsRouteWithChildren
   '/teams/$teamId': typeof AuthenticatedTeamsTeamIdRoute
@@ -78,9 +108,13 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/attendance': typeof AuthenticatedAttendanceRoute
+  '/checkpoints': typeof AuthenticatedCheckpointsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/export': typeof AuthenticatedExportRoute
   '/import': typeof AuthenticatedImportRoute
   '/qr-codes': typeof AuthenticatedQrCodesRoute
+  '/scan-history': typeof AuthenticatedScanHistoryRoute
   '/scanner': typeof AuthenticatedScannerRoute
   '/teams': typeof AuthenticatedTeamsRouteWithChildren
   '/teams/$teamId': typeof AuthenticatedTeamsTeamIdRoute
@@ -90,9 +124,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
+  '/_authenticated/checkpoints': typeof AuthenticatedCheckpointsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/export': typeof AuthenticatedExportRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/qr-codes': typeof AuthenticatedQrCodesRoute
+  '/_authenticated/scan-history': typeof AuthenticatedScanHistoryRoute
   '/_authenticated/scanner': typeof AuthenticatedScannerRoute
   '/_authenticated/teams': typeof AuthenticatedTeamsRouteWithChildren
   '/_authenticated/teams/$teamId': typeof AuthenticatedTeamsTeamIdRoute
@@ -102,9 +140,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/attendance'
+    | '/checkpoints'
     | '/dashboard'
+    | '/export'
     | '/import'
     | '/qr-codes'
+    | '/scan-history'
     | '/scanner'
     | '/teams'
     | '/teams/$teamId'
@@ -112,9 +154,13 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/attendance'
+    | '/checkpoints'
     | '/dashboard'
+    | '/export'
     | '/import'
     | '/qr-codes'
+    | '/scan-history'
     | '/scanner'
     | '/teams'
     | '/teams/$teamId'
@@ -123,9 +169,13 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/attendance'
+    | '/_authenticated/checkpoints'
     | '/_authenticated/dashboard'
+    | '/_authenticated/export'
     | '/_authenticated/import'
     | '/_authenticated/qr-codes'
+    | '/_authenticated/scan-history'
     | '/_authenticated/scanner'
     | '/_authenticated/teams'
     | '/_authenticated/teams/$teamId'
@@ -160,11 +210,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/attendance': {
+      id: '/_authenticated/attendance'
+      path: '/attendance'
+      fullPath: '/attendance'
+      preLoaderRoute: typeof AuthenticatedAttendanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/checkpoints': {
+      id: '/_authenticated/checkpoints'
+      path: '/checkpoints'
+      fullPath: '/checkpoints'
+      preLoaderRoute: typeof AuthenticatedCheckpointsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/export': {
+      id: '/_authenticated/export'
+      path: '/export'
+      fullPath: '/export'
+      preLoaderRoute: typeof AuthenticatedExportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/import': {
@@ -179,6 +250,13 @@ declare module '@tanstack/react-router' {
       path: '/qr-codes'
       fullPath: '/qr-codes'
       preLoaderRoute: typeof AuthenticatedQrCodesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/scan-history': {
+      id: '/_authenticated/scan-history'
+      path: '/scan-history'
+      fullPath: '/scan-history'
+      preLoaderRoute: typeof AuthenticatedScanHistoryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/scanner': {
@@ -217,17 +295,25 @@ const AuthenticatedTeamsRouteWithChildren =
   AuthenticatedTeamsRoute._addFileChildren(AuthenticatedTeamsRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAttendanceRoute: typeof AuthenticatedAttendanceRoute
+  AuthenticatedCheckpointsRoute: typeof AuthenticatedCheckpointsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedExportRoute: typeof AuthenticatedExportRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedQrCodesRoute: typeof AuthenticatedQrCodesRoute
+  AuthenticatedScanHistoryRoute: typeof AuthenticatedScanHistoryRoute
   AuthenticatedScannerRoute: typeof AuthenticatedScannerRoute
   AuthenticatedTeamsRoute: typeof AuthenticatedTeamsRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAttendanceRoute: AuthenticatedAttendanceRoute,
+  AuthenticatedCheckpointsRoute: AuthenticatedCheckpointsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedExportRoute: AuthenticatedExportRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedQrCodesRoute: AuthenticatedQrCodesRoute,
+  AuthenticatedScanHistoryRoute: AuthenticatedScanHistoryRoute,
   AuthenticatedScannerRoute: AuthenticatedScannerRoute,
   AuthenticatedTeamsRoute: AuthenticatedTeamsRouteWithChildren,
 }
