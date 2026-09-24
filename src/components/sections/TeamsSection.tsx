@@ -6,10 +6,20 @@ import { fetchTeams, formatDateTime, memberNames, setTeamPresent, type Team } fr
 import { downloadTeamQr, printQrCard } from "@/lib/qr";
 import { EmptyState, ErrorState, LoadingState, Panel } from "@/components/ui-bits";
 import { cn } from "@/lib/utils";
+import { PinDialog } from "@/components/PinDialog";
+import { cacheTeams } from "@/lib/offline";
 
 export function TeamsSection() {
   const queryClient = useQueryClient();
-  const { data, isLoading, error } = useQuery({ queryKey: ["teams"], queryFn: fetchTeams });
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["teams"],
+    queryFn: async () => {
+      const rows = await fetchTeams();
+      cacheTeams(rows);
+      return rows;
+    },
+  });
+  const [confirmTeam, setConfirmTeam] = useState<Team | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "present" | "absent">("all");
   const [pending, setPending] = useState<string | null>(null);
@@ -101,7 +111,7 @@ export function TeamsSection() {
                         aria-label={`Mark ${team.team_name} present`}
                         checked={present}
                         disabled={pending === team.id}
-                        onChange={() => void toggle(team)}
+                        onChange={() => setConfirmTeam(team)}
                         className="h-4 w-4 cursor-pointer accent-current"
                       />
                     </td>
@@ -138,6 +148,16 @@ export function TeamsSection() {
         </div>
         {teams.length === 0 && <p className="px-4 py-10 text-center text-sm text-muted-foreground">No teams match.</p>}
       </Panel>
+      <PinDialog
+        open={Boolean(confirmTeam)}
+        title={confirmTeam ? `${confirmTeam.checked_in_at ? "Mark absent" : "Mark present"}: ${confirmTeam.team_name}` : ""}
+        onCancel={() => setConfirmTeam(null)}
+        onConfirm={() => {
+          const t = confirmTeam;
+          setConfirmTeam(null);
+          if (t) void toggle(t);
+        }}
+      />
     </>
   );
 }
