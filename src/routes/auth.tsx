@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 const ORGANIZER_EMAIL = "organizer@dietcode.app";
 
 export const Route = createFileRoute("/auth")({
-  ssr: false,
   head: () => ({
     meta: [
       { title: "Organizer sign in · DIET CODE" },
