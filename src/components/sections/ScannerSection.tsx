@@ -307,18 +307,26 @@ export function ScannerSection() {
           </form>
         </Panel>
 
-        <Panel className="px-5 py-5">
-          <h2 className="text-sm font-semibold">Scan result</h2>
+      </div>
+
+      <Dialog
+        open={Boolean(team || scanError)}
+        onOpenChange={(next) => {
+          if (!next) {
+            setTeam(null);
+            setScanError(null);
+          }
+        }}
+      >
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold">Scan result</DialogTitle>
+          </DialogHeader>
 
           {scanError && (
-            <p className="mt-4 rounded-md border border-foreground px-3 py-2 text-sm">{scanError}</p>
+            <p className="rounded-md border border-foreground px-3 py-2 text-sm">{scanError}</p>
           )}
 
-          {!team && !scanError && (
-            <p className="mt-6 text-sm text-muted-foreground">
-              Waiting for a scan. Team details will appear here.
-            </p>
-          )}
 
           {team && (
             <div className="mt-4">
