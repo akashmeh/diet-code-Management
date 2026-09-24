@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import logo from "@/assets/diet_code_logo.png.asset.json";
+import logo from "@/assets/diet_code_logo.png";
 
 const NAV = [
   { to: "/dashboard", label: "Event" },
@@ -28,7 +28,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-secondary/40">
       <header className="sticky top-0 z-30 border-b border-border bg-background">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 lg:px-8">
-          <img src={logo.url} alt="DIET CODE" className="h-9 w-auto" />
+          <img src={logo} alt="DIET CODE" className="h-9 w-auto" />
           <nav className="flex flex-wrap gap-1">
             {NAV.map((item) => (
               <Link

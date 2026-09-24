@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import logo from "@/assets/diet_code_logo.png.asset.json";
+import logo from "@/assets/diet_code_logo.png";
 
 // Single shared organizer account; organizers only type the password.
 const ORGANIZER_EMAIL = "organizer@dietcode.app";
@@ -68,7 +68,7 @@ function AuthPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-secondary/40 px-4">
       <form onSubmit={submit} className="panel w-full max-w-xs space-y-4 px-6 py-8">
-        <img src={logo.url} alt="DIET CODE" className="mx-auto h-20 w-auto" />
+        <img src={logo} alt="DIET CODE" className="mx-auto h-20 w-auto" />
         <input
           type="password"
           required
