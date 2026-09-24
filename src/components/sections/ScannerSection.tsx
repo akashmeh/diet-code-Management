@@ -391,8 +391,8 @@ export function ScannerSection() {
               </div>
             </div>
           )}
-        </Panel>
-      </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
