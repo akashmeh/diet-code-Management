@@ -177,11 +177,14 @@ export function ScannerSection() {
             )}
           </div>
 
-          <div
-            id={REGION_ID}
-            className="mt-5 flex min-h-[260px] items-center justify-center overflow-hidden rounded-md border border-border bg-muted text-sm text-muted-foreground"
-          >
-            {!scanning && "Camera is off"}
+          <div className="relative mt-5 min-h-[260px] overflow-hidden rounded-md border border-border bg-muted">
+            {/* html5-qrcode owns this node — React must never render children inside it */}
+            <div id={REGION_ID} className="w-full [&_video]:!w-full [&_video]:!h-auto" />
+            {!scanning && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+                Camera is off
+              </div>
+            )}
           </div>
 
           <div className="mt-4 flex gap-2">
@@ -282,8 +285,7 @@ export function ScannerSection() {
                   Record anyway (override)
                 </button>
                 <a
-                  to="/teams/$teamId"
-                  params={{ teamId: team.id }}
+                  href={`/teams/${team.id}`}
                   className="rounded-md border border-border px-4 py-2 text-sm hover:bg-accent"
                 >
                   Open team
