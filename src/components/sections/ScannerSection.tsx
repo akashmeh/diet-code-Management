@@ -1,4 +1,3 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -16,24 +15,10 @@ import {
 } from "@/lib/dietcode";
 import { PageHeader, Panel, StatusPill } from "@/components/ui-bits";
 
-export const Route = createFileRoute("/_authenticated/scanner")({
-  ssr: false,
-  head: () => ({
-    meta: [
-      { title: "Scanner · DIET CODE Organizer" },
-      { name: "description", content: "Scan team QR passes with the device camera to check in teams and record checkpoints." },
-      { property: "og:title", content: "Scanner · DIET CODE Organizer" },
-      { property: "og:description", content: "Camera QR scanning for DIET CODE attendance and checkpoints." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: ScannerPage,
-});
 
 const REGION_ID = "dietcode-scanner-region";
 
-function ScannerPage() {
+export function ScannerSection() {
   const queryClient = useQueryClient();
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const busyRef = useRef(false);
@@ -296,13 +281,13 @@ function ScannerPage() {
                 >
                   Record anyway (override)
                 </button>
-                <Link
+                <a
                   to="/teams/$teamId"
                   params={{ teamId: team.id }}
                   className="rounded-md border border-border px-4 py-2 text-sm hover:bg-accent"
                 >
                   Open team
-                </Link>
+                </a>
               </div>
 
               <div className="mt-5 border-t border-border pt-4">

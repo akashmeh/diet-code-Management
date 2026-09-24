@@ -61,7 +61,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       >
         <div className="border-b border-sidebar-border px-5 py-5">
           <p className="font-mono text-base tracking-[0.2em] text-foreground">DIET CODE</p>
-          <p className="mt-1 text-xs text-muted-foreground">SKETCH · SRM Ramapuram</p>
+          <p className="mt-1 text-xs text-muted-foreground">SKETCH</p>
         </div>
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           {NAV.map((item) => {

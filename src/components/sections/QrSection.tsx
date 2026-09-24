@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -6,21 +5,8 @@ import { fetchTeams, type Team } from "@/lib/dietcode";
 import { downloadAllQrZip, downloadTeamQr, printQrCard, qrDataUrl } from "@/lib/qr";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/ui-bits";
 
-export const Route = createFileRoute("/_authenticated/qr-codes")({
-  head: () => ({
-    meta: [
-      { title: "QR Codes · DIET CODE Organizer" },
-      { name: "description", content: "View, download and print printable QR passes for every DIET CODE team." },
-      { property: "og:title", content: "QR Codes · DIET CODE Organizer" },
-      { property: "og:description", content: "Printable DIET CODE team QR cards, individually or as a ZIP." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: QrCodesPage,
-});
 
-function QrCodesPage() {
+export function QrSection() {
   const { data, isLoading, error } = useQuery({ queryKey: ["teams"], queryFn: fetchTeams });
   const [search, setSearch] = useState("");
   const [zipProgress, setZipProgress] = useState<number | null>(null);

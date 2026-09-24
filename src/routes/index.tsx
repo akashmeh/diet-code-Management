@@ -5,11 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "DIET CODE Organizer Console · SKETCH, SRM Ramapuram" },
+      { title: "DIET CODE Organizer Console · SKETCH" },
       {
         name: "description",
         content:
-          "Organizer console for DIET CODE by SKETCH, SRM Ramapuram: team import, QR passes, attendance and checkpoint scanning.",
+          "Organizer console for DIET CODE by SKETCH: team import, QR passes, attendance and checkpoint scanning.",
       },
       { property: "og:title", content: "DIET CODE Organizer Console" },
       {
@@ -36,7 +36,7 @@ function Landing() {
     <div className="flex min-h-screen items-center justify-center bg-secondary/40 px-4">
       <div className="panel w-full max-w-md px-8 py-10 text-center">
         <p className="font-mono text-xl tracking-[0.25em] text-foreground">DIET CODE</p>
-        <p className="mt-2 text-sm text-muted-foreground">SKETCH · SRM Ramapuram</p>
+        <p className="mt-2 text-sm text-muted-foreground">SKETCH</p>
         <div className="my-7 border-t border-border" />
         <h1 className="text-lg font-semibold text-foreground">Organizer Console</h1>
         <p className="mt-2 text-sm text-muted-foreground">

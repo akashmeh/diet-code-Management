@@ -9,7 +9,7 @@ export const Route = createFileRoute("/auth")({
       { title: "Organizer sign in · DIET CODE" },
       {
         name: "description",
-        content: "Sign in to the DIET CODE organizer console for SKETCH, SRM Ramapuram.",
+        content: "Sign in to the DIET CODE organizer console for SKETCH.",
       },
       { property: "og:title", content: "Organizer sign in · DIET CODE" },
       { property: "og:description", content: "Organizer access to the DIET CODE event console." },
