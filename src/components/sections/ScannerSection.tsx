@@ -167,7 +167,8 @@ export function ScannerSection() {
     if (!team) return;
     if (!isOnline()) {
       try {
-        const at = queueScan({ team, type: mode, checkpointId: mode === "checkpoint" ? checkpointId : null, override });
+        const cpName = checkpoints.data?.find((c) => c.id === checkpointId)?.name ?? null;
+        const at = queueScan({ team, type: mode, checkpointId: mode === "checkpoint" ? checkpointId : null, checkpointName: cpName, override });
         if (mode === "attendance" && !team.checked_in_at) setTeam({ ...team, checked_in_at: at });
         toast.success(`Saved offline — ${team.team_name}. Will sync when back online.`);
       } catch (caught) {

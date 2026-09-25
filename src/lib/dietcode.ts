@@ -183,3 +183,12 @@ export async function setTeamPresent(teamId: string, present: boolean) {
     .eq("id", teamId);
   if (error) throw error;
 }
+
+export async function deleteTeam(teamId: string) {
+  // Delete related scans first to avoid foreign key constraint errors if cascade delete is not setup
+  const { error: scansError } = await supabase.from("scans").delete().eq("team_uuid", teamId);
+  if (scansError) throw scansError;
+
+  const { error } = await supabase.from("teams").delete().eq("id", teamId);
+  if (error) throw error;
+}

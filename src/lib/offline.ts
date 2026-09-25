@@ -7,9 +7,11 @@ const QUEUE_KEY = "dietcode.scan.queue";
 export type QueuedScan = {
   id: string;
   team_uuid: string;
+  team_id: string;
   team_name: string;
   scan_type: "attendance" | "checkpoint";
   checkpoint_id: string | null;
+  checkpoint_name?: string | null;
   is_override: boolean;
   scanned_at: string;
 };
@@ -55,6 +57,7 @@ export function queueScan(input: {
   team: Team;
   type: "attendance" | "checkpoint";
   checkpointId: string | null;
+  checkpointName?: string | null;
   override: boolean;
 }) {
   const queue = getQueue();
@@ -80,9 +83,11 @@ export function queueScan(input: {
   queue.push({
     id: crypto.randomUUID(),
     team_uuid: input.team.id,
+    team_id: input.team.team_id,
     team_name: input.team.team_name,
     scan_type: input.type,
     checkpoint_id: input.checkpointId,
+    checkpoint_name: input.checkpointName ?? null,
     is_override: input.override,
     scanned_at: scannedAt,
   });

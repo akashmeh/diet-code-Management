@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { fetchTeams, formatDateTime, memberNames, setTeamPresent, type Team } from "@/lib/dietcode";
+import { fetchTeams, formatDateTime, memberNames, setTeamPresent, deleteTeam, type Team } from "@/lib/dietcode";
 import { downloadTeamQr, printQrCard } from "@/lib/qr";
 import { EmptyState, ErrorState, LoadingState, Panel } from "@/components/ui-bits";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ export function TeamsSection() {
     },
   });
   const [confirmTeam, setConfirmTeam] = useState<Team | null>(null);
+  const [deleteTeamConfirm, setDeleteTeamConfirm] = useState<Team | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "present" | "absent">("all");
   const [pending, setPending] = useState<string | null>(null);
@@ -47,6 +48,20 @@ export function TeamsSection() {
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not update attendance.");
       queryClient.invalidateQueries({ queryKey: ["teams"] });
+    } finally {
+      setPending(null);
+    }
+  }
+
+  async function handleDeleteTeam(team: Team) {
+    setPending(team.id);
+    try {
+      await deleteTeam(team.id);
+      toast.success(`Team ${team.team_name} deleted.`);
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+      queryClient.invalidateQueries({ queryKey: ["scans"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not delete team.");
     } finally {
       setPending(null);
     }
@@ -139,6 +154,12 @@ export function TeamsSection() {
                       >
                         Print
                       </button>
+                      <button
+                        onClick={() => setDeleteTeamConfirm(team)}
+                        className="ml-2 rounded-md border border-red-200 bg-background px-2 py-1 text-xs text-red-500 hover:bg-red-50"
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 );
@@ -156,6 +177,16 @@ export function TeamsSection() {
           const t = confirmTeam;
           setConfirmTeam(null);
           if (t) void toggle(t);
+        }}
+      />
+      <PinDialog
+        open={Boolean(deleteTeamConfirm)}
+        title={deleteTeamConfirm ? `Delete Team: ${deleteTeamConfirm.team_name}` : ""}
+        onCancel={() => setDeleteTeamConfirm(null)}
+        onConfirm={() => {
+          const t = deleteTeamConfirm;
+          setDeleteTeamConfirm(null);
+          if (t) void handleDeleteTeam(t);
         }}
       />
     </>

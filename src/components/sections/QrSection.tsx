@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { fetchTeams, type Team } from "@/lib/dietcode";
-import { downloadAllQrZip, downloadTeamQr, printQrCard, qrDataUrl } from "@/lib/qr";
+import { downloadAllQrZip, printQrCard, qrDataUrl } from "@/lib/qr";
+import { downloadTicketAsPdf } from "@/lib/pdf";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/ui-bits";
 
 
@@ -83,26 +84,74 @@ function QrCard({ team }: { team: Team }) {
   }, [team.qr_token]);
 
   return (
-    <div className="panel flex flex-col items-center px-4 py-5 text-center">
-      <p className="font-mono text-[11px] tracking-[0.2em] text-muted-foreground">DIET CODE</p>
-      <p className="mt-1 font-mono text-xs text-muted-foreground">{team.team_id}</p>
-      <p className="mt-1 truncate text-sm font-medium">{team.team_name}</p>
-      {src ? (
-        <img src={src} alt={`QR code for ${team.team_name}`} className="mt-3 w-32" />
-      ) : (
-        <div className="mt-3 h-32 w-32 animate-pulse rounded bg-muted" />
-      )}
-      <p className="mt-2 text-xs text-muted-foreground">Scan to verify</p>
-      <div className="mt-4 flex gap-2">
-        <button
-          onClick={() => downloadTeamQr(team).catch(() => toast.error("Download failed."))}
-          className="rounded-md border border-border px-2.5 py-1.5 text-xs hover:bg-accent"
+    <div className="flex flex-col items-center">
+      <div id={`ticket-${team.team_id}`} className="w-full max-w-[320px] overflow-hidden rounded-2xl bg-white shadow-xl mb-4 border border-border/50 text-left">
+        {/* Top Section with Background */}
+        <div 
+          className="bg-[#800020] bg-cover p-6 text-white" 
+          style={{ backgroundImage: "url('/mailbk.png')" }}
         >
-          Download
+          {/* Logo */}
+          <div className="mb-6 text-center">
+            <img 
+              src="/diet-code-logo.png" 
+              alt="Diet Code Logo" 
+              className="mx-auto block h-auto w-full max-w-[150px]" 
+            />
+          </div>
+
+          {/* Team Info */}
+          <div className="mb-1 text-sm text-white/90">Team:</div>
+          <div className="mb-6 font-[Impact,Arial_Black,sans-serif] text-2xl font-bold uppercase leading-tight text-white tracking-wide break-words">
+            {team.team_name}
+          </div>
+
+          {/* Event Info */}
+          <div className="mb-6 text-sm leading-relaxed text-white/90">
+            September 26, 2026<br />
+            9:00 AM<br />
+            Srm Ramapuram, MLCP Lab - 6
+          </div>
+
+          {/* Team ID */}
+          <div className="border-t border-white/30 pt-4 flex justify-between items-end">
+            <div>
+              <span className="mb-1 block text-xs text-white/80">Team ID</span>
+              <span className="block font-mono text-xl font-bold text-[#FFFF00]">
+                {team.team_id}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* QR Section */}
+        <div className="bg-white px-8 py-6 text-center flex flex-col items-center">
+          <p className="mb-4 w-full text-left text-xs font-bold uppercase tracking-widest text-black">
+          </p>
+          {src ? (
+            <img 
+              src={src} 
+              alt={`QR code for ${team.team_name}`} 
+              className="block h-auto w-full max-w-[140px] mx-auto" 
+            />
+          ) : (
+            <div className="flex h-[140px] w-[140px] items-center justify-center bg-gray-50 text-sm text-muted-foreground mx-auto">
+              Preparing QR…
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex w-full max-w-[320px] gap-2">
+        <button
+          onClick={() => downloadTicketAsPdf(team.team_id, team.team_name)}
+          className="flex-1 rounded-md border border-border px-2.5 py-1.5 text-xs hover:bg-accent bg-background"
+        >
+          Download PDF
         </button>
         <button
           onClick={() => printQrCard(team).catch(() => toast.error("Print failed."))}
-          className="rounded-md border border-border px-2.5 py-1.5 text-xs hover:bg-accent"
+          className="flex-1 rounded-md border border-border px-2.5 py-1.5 text-xs hover:bg-accent bg-background"
         >
           Print
         </button>

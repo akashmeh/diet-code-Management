@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchTeamScans, formatDateTime, memberNames, type Team } from "@/lib/dietcode";
-import { downloadTeamQr, downloadTeamQrPng, printQrCard, qrDataUrl } from "@/lib/qr";
+import { downloadTeamQrPng, printQrCard, qrDataUrl } from "@/lib/qr";
+import { downloadTicketAsPdf } from "@/lib/pdf";
 import {
   ErrorState,
   LoadingState,
@@ -105,20 +106,72 @@ function TeamDetailPage() {
           </div>
         </Panel>
 
-        <Panel className="px-5 py-5 text-center">
-          <h2 className="text-sm font-semibold">QR pass</h2>
-          {qr ? (
-            <img src={qr} alt={`QR code for ${team.team_name}`} className="mx-auto mt-4 w-40" />
-          ) : (
-            <p className="mt-6 text-sm text-muted-foreground">Preparing QR…</p>
-          )}
-          <p className="mt-2 text-xs text-muted-foreground">Scan to verify</p>
-          <div className="mt-5 grid gap-2">
+        <Panel className="px-5 py-5 flex flex-col items-center">
+          <h2 className="text-sm font-semibold mb-5 w-full text-left">QR pass</h2>
+          
+          <div id={`ticket-${team.team_id}`} className="w-full max-w-[320px] overflow-hidden rounded-2xl bg-white shadow-xl mb-6 border border-border/50">
+            {/* Top Section with Background */}
+            <div 
+              className="bg-[#800020] bg-cover p-6 text-white" 
+              style={{ backgroundImage: "url('/mailbk.png')" }}
+            >
+              {/* Logo */}
+              <div className="mb-6 text-center">
+                <img 
+                  src="/diet-code-logo.png" 
+                  alt="Diet Code Logo" 
+                  className="mx-auto block h-auto w-full max-w-[180px]" 
+                />
+              </div>
+
+              {/* Team Info */}
+              <div className="mb-1 text-sm text-white/90">Team:</div>
+              <div className="mb-6 font-[Impact,Arial_Black,sans-serif] text-2xl font-bold uppercase leading-tight text-white tracking-wide break-words">
+                {team.team_name}
+              </div>
+
+              {/* Event Info */}
+              <div className="mb-6 text-sm leading-relaxed text-white/90">
+                September 26, 2026<br />
+                9:00 AM<br />
+                Srm Ramapuram, MLCP Lab - 6
+              </div>
+
+              {/* Team ID */}
+              <div className="border-t border-white/30 pt-4 flex justify-between items-end">
+                <div>
+                  <span className="mb-1 block text-xs text-white/80">Team ID</span>
+                  <span className="block font-mono text-xl font-bold text-[#FFFF00]">
+                    {team.team_id}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* QR Section */}
+            <div className="bg-white px-8 py-6 text-center flex flex-col items-center">
+              <p className="mb-4 w-full text-left text-xs font-bold uppercase tracking-widest text-black">
+              </p>
+              {qr ? (
+                <img 
+                  src={qr} 
+                  alt={`QR code for ${team.team_name}`} 
+                  className="block h-auto w-full max-w-[160px] mx-auto" 
+                />
+              ) : (
+                <div className="flex h-[160px] w-[160px] items-center justify-center bg-gray-50 text-sm text-muted-foreground mx-auto">
+                  Preparing QR…
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="grid w-full gap-2">
             <button
-              onClick={() => downloadTeamQr(team).catch(() => toast.error("Download failed."))}
+              onClick={() => downloadTicketAsPdf(team.team_id, team.team_name)}
               className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
             >
-              Download card (SVG)
+              Download PDF
             </button>
             <button
               onClick={() => downloadTeamQrPng(team).catch(() => toast.error("Download failed."))}
