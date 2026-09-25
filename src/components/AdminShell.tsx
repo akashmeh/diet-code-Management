@@ -1,7 +1,5 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/diet_code_logo.png";
 
@@ -14,15 +12,6 @@ const NAV = [
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-
-  async function signOut() {
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
-  }
 
   return (
     <div className="min-h-screen bg-secondary/40">
@@ -43,9 +32,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </nav>
-          <button onClick={signOut} className="ml-auto rounded-md border border-border px-3 py-1.5 text-sm hover:bg-accent">
-            Sign out
-          </button>
         </div>
       </header>
       <main className="mx-auto w-full max-w-6xl px-4 py-6 lg:px-8 lg:py-8">{children}</main>

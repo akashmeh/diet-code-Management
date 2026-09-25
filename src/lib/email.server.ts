@@ -3,7 +3,8 @@ import nodemailer from "nodemailer";
 import QRCode from "qrcode";
 import { supabase } from "@/integrations/supabase/client";
 import { qrPayload } from "./dietcode";
-import { jsPDF } from "jspdf";
+import fs from "fs";
+import path from "path";
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -14,6 +15,33 @@ const transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASS,
   },
 });
+
+/** Read the email.html template from src/assets and inject team-specific values */
+function buildEmailHtml(opts: {
+  teamName: string;
+  teamId: string;
+  qrCid: string;
+}): string {
+  const templatePath = path.resolve(
+    process.cwd(),
+    "src/assets/email.html"
+  );
+  let html = fs.readFileSync(templatePath, "utf-8");
+
+  // Replace team name
+  html = html.replace(/Spam chandra/g, opts.teamName);
+
+  // Replace team ID
+  html = html.replace(/DC001/g, opts.teamId);
+
+  // Replace the external QR image URL with the inline CID reference
+  html = html.replace(
+    /https:\/\/api\.qrserver\.com\/v1\/create-qr-code\/[^"']*/g,
+    `cid:${opts.qrCid}`
+  );
+
+  return html;
+}
 
 export const sendTicketEmailFn = createServerFn({ method: "POST" })
   .validator((data: { teamId: string; isTest?: boolean; testEmail?: string; organizerEmail?: string }) => data)
@@ -37,43 +65,23 @@ export const sendTicketEmailFn = createServerFn({ method: "POST" })
     }
 
     try {
-      // 2. Generate QR
-      const qrDataUrl = await QRCode.toDataURL(qrPayload(teamData.qr_token), {
+      // 2. Generate QR as PNG buffer for inline embedding
+      const qrBuffer = await QRCode.toBuffer(qrPayload(teamData.qr_token), {
         width: 300,
         margin: 1,
         color: { dark: "#000000", light: "#ffffff" },
       });
 
-      // 4. Generate PDF buffer
-      const doc = new jsPDF();
-      doc.setFontSize(24);
-      doc.text("DIET CODE TICKET", 105, 20, { align: "center" });
-      doc.setFontSize(16);
-      doc.text(`Team ID: ${teamData.team_id}`, 20, 40);
-      doc.text(`Team Name: ${teamData.team_name}`, 20, 50);
-      doc.text("Scan QR to verify attendance", 20, 70);
-      
-      const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
+      const qrCid = `qr-${teamData.team_id}@dietcode`;
 
-      // 3. Build HTML
-      const html = `
-        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; border: 1px solid #ddd; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-          <div style="background-color: #800020; color: white; padding: 24px; text-align: center;">
-            <h2 style="margin: 0; font-size: 14px; opacity: 0.9;">Team:</h2>
-            <h1 style="margin: 4px 0 16px 0; font-size: 28px; text-transform: uppercase;">${teamData.team_name}</h1>
-            <p style="margin: 0; font-size: 14px; opacity: 0.9;">September 26, 2026<br/>9:00 AM<br/>Srm Ramapuram, MLCP Lab - 6</p>
-            <div style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 16px; text-align: left;">
-              <span style="font-size: 12px; opacity: 0.8; display: block;">Team ID</span>
-              <span style="font-size: 20px; font-weight: bold; color: #FFFF00;">${teamData.team_id}</span>
-            </div>
-          </div>
-          <div style="padding: 24px; text-align: center; background-color: white;">
-            <img src="${qrDataUrl}" alt="QR Code" style="width: 150px; height: 150px;" />
-          </div>
-        </div>
-      `;
+      // 3. Build HTML from template
+      const html = buildEmailHtml({
+        teamName: teamData.team_name,
+        teamId: teamData.team_id,
+        qrCid,
+      });
 
-      // 5. Send Email
+      // 4. Send Email with QR as inline CID attachment
       await transporter.sendMail({
         from: process.env.SMTP_FROM || '"DIET CODE" <noreply@dietcode.com>',
         to: recipient,
@@ -81,13 +89,14 @@ export const sendTicketEmailFn = createServerFn({ method: "POST" })
         html,
         attachments: [
           {
-            filename: `${teamData.team_id}-ticket.pdf`,
-            content: pdfBuffer,
-          }
-        ]
+            filename: "qr.png",
+            content: qrBuffer,
+            cid: qrCid,
+          },
+        ],
       });
 
-      // 6. Log success
+      // 5. Log success
       await supabase.from("email_logs").insert({
         team_uuid: teamData.id,
         team_id: teamData.team_id,
@@ -120,11 +129,9 @@ export const sendBulkTicketEmailsFn = createServerFn({ method: "POST" })
     const { teamIds, isTest, testEmail, organizerEmail } = data;
     const results = [];
 
-    // Import the single handler so we can reuse it
-    // Using a simpler approach here because calling serverFn inside serverFn is tricky in some setups
     for (const teamId of teamIds) {
       const res = await sendTicketEmailFn({
-        data: { teamId, isTest, testEmail, organizerEmail }
+        data: { teamId, isTest, testEmail, organizerEmail },
       });
       results.push({ teamId, ...res });
     }

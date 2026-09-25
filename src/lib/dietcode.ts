@@ -131,17 +131,14 @@ export type RecordScanInput = {
 
 /** Records a scan. Duplicates are blocked by unique database indexes. */
 export async function recordScan({ team, type, checkpointId, override }: RecordScanInput) {
-  const { data: userData } = await supabase.auth.getUser();
-  const user = userData.user;
-  if (!user) throw new Error("You are signed out. Please sign in again.");
   if (type === "checkpoint" && !checkpointId) throw new Error("Select a checkpoint first.");
 
   const { error } = await supabase.from("scans").insert({
     team_uuid: team.id,
     checkpoint_id: type === "checkpoint" ? checkpointId! : null,
     scan_type: type,
-    organizer_id: user.id,
-    organizer_email: user.email ?? null,
+    organizer_id: null,
+    organizer_email: null,
     is_override: Boolean(override),
   });
 

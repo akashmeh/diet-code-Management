@@ -109,17 +109,14 @@ export async function syncQueue(): Promise<number> {
   syncing = true;
   let synced = 0;
   try {
-    const { data } = await supabase.auth.getSession();
-    const user = data.session?.user;
-    if (!user) return 0;
     const remaining: QueuedScan[] = [];
     for (const item of queue) {
       const { error } = await supabase.from("scans").insert({
         team_uuid: item.team_uuid,
         checkpoint_id: item.checkpoint_id,
         scan_type: item.scan_type,
-        organizer_id: user.id,
-        organizer_email: user.email ?? null,
+        organizer_id: null,
+        organizer_email: null,
         is_override: item.is_override,
         scanned_at: item.scanned_at,
       });
