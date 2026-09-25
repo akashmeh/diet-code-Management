@@ -5,6 +5,8 @@ import { fetchTeams, type Team } from "@/lib/dietcode";
 import { downloadAllQrZip, printQrCard, qrDataUrl } from "@/lib/qr";
 import { downloadTicketAsPdf } from "@/lib/pdf";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/ui-bits";
+import { EmailConfirmDialog } from "@/components/EmailConfirmDialog";
+import { sendTicketEmailFn } from "@/lib/email.server";
 
 
 export function QrSection() {
@@ -78,10 +80,25 @@ export function QrSection() {
 
 function QrCard({ team }: { team: Team }) {
   const [src, setSrc] = useState<string | null>(null);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     qrDataUrl(team.qr_token, 260).then(setSrc).catch(() => setSrc(null));
   }, [team.qr_token]);
+
+  const handleEmail = async (isTest: boolean, testEmail: string) => {
+    setEmailOpen(false);
+    const toastId = toast.loading("Sending email...");
+    try {
+      const res = await sendTicketEmailFn({ data: { teamId: team.team_id, isTest, testEmail }});
+      if (res.success) toast.success("Email sent", { id: toastId });
+      else toast.error("Failed: " + res.message, { id: toastId });
+      queryClient.invalidateQueries({ queryKey: ["emailLogs"] });
+    } catch (e: any) {
+      toast.error("Error: " + e.message, { id: toastId });
+    }
+  };
 
   return (
     <div className="flex flex-col items-center">
@@ -144,10 +161,16 @@ function QrCard({ team }: { team: Team }) {
 
       <div className="flex w-full max-w-[320px] gap-2">
         <button
+          onClick={() => setEmailOpen(true)}
+          className="flex-1 rounded-md border border-border px-2.5 py-1.5 text-xs hover:bg-accent bg-background"
+        >
+          📧 Email
+        </button>
+        <button
           onClick={() => downloadTicketAsPdf(team.team_id, team.team_name)}
           className="flex-1 rounded-md border border-border px-2.5 py-1.5 text-xs hover:bg-accent bg-background"
         >
-          Download PDF
+          PDF
         </button>
         <button
           onClick={() => printQrCard(team).catch(() => toast.error("Print failed."))}
@@ -156,6 +179,7 @@ function QrCard({ team }: { team: Team }) {
           Print
         </button>
       </div>
+      <EmailConfirmDialog open={emailOpen} teams={[team]} onCancel={() => setEmailOpen(false)} onConfirm={handleEmail} />
     </div>
   );
 }

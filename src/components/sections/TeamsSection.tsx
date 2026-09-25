@@ -8,6 +8,8 @@ import { EmptyState, ErrorState, LoadingState, Panel } from "@/components/ui-bit
 import { cn } from "@/lib/utils";
 import { PinDialog } from "@/components/PinDialog";
 import { cacheTeams } from "@/lib/offline";
+import { EmailConfirmDialog } from "@/components/EmailConfirmDialog";
+import { sendTicketEmailFn } from "@/lib/email.server";
 
 export function TeamsSection() {
   const queryClient = useQueryClient();
@@ -21,9 +23,25 @@ export function TeamsSection() {
   });
   const [confirmTeam, setConfirmTeam] = useState<Team | null>(null);
   const [deleteTeamConfirm, setDeleteTeamConfirm] = useState<Team | null>(null);
+  const [emailTeamConfirm, setEmailTeamConfirm] = useState<Team | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "present" | "absent">("all");
   const [pending, setPending] = useState<string | null>(null);
+
+  const handleEmail = async (isTest: boolean, testEmail: string) => {
+    if (!emailTeamConfirm) return;
+    const team = emailTeamConfirm;
+    setEmailTeamConfirm(null);
+    const toastId = toast.loading("Sending email...");
+    try {
+      const res = await sendTicketEmailFn({ data: { teamId: team.team_id, isTest, testEmail }});
+      if (res.success) toast.success("Email sent", { id: toastId });
+      else toast.error("Failed: " + res.message, { id: toastId });
+      queryClient.invalidateQueries({ queryKey: ["emailLogs"] });
+    } catch (e: any) {
+      toast.error("Error: " + e.message, { id: toastId });
+    }
+  };
 
   const teams = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -143,8 +161,14 @@ export function TeamsSection() {
                     </td>
                     <td className="whitespace-nowrap px-4 py-2.5 text-right">
                       <button
-                        onClick={() => downloadTeamQr(team).catch(() => toast.error("Could not build the QR card."))}
+                        onClick={() => setEmailTeamConfirm(team)}
                         className="rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground hover:bg-accent"
+                      >
+                        📧 Email
+                      </button>
+                      <button
+                        onClick={() => downloadTeamQr(team).catch(() => toast.error("Could not build the QR card."))}
+                        className="ml-2 rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground hover:bg-accent"
                       >
                         Download
                       </button>
@@ -188,6 +212,12 @@ export function TeamsSection() {
           setDeleteTeamConfirm(null);
           if (t) void handleDeleteTeam(t);
         }}
+      />
+      <EmailConfirmDialog
+        open={Boolean(emailTeamConfirm)}
+        teams={emailTeamConfirm ? [emailTeamConfirm] : []}
+        onCancel={() => setEmailTeamConfirm(null)}
+        onConfirm={handleEmail}
       />
     </>
   );

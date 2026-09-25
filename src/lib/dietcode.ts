@@ -2,6 +2,18 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const QR_PREFIX = "DIETCODE:";
 
+export type EmailLog = {
+  id: string;
+  team_uuid: string | null;
+  team_id: string;
+  team_name: string;
+  recipient_email: string;
+  status: "sent" | "failed" | "test";
+  error_message: string | null;
+  sent_at: string;
+  sent_by: string | null;
+};
+
 export type Team = {
   id: string;
   team_id: string;
@@ -79,6 +91,15 @@ export async function fetchCheckpoints() {
     .order("position", { ascending: true });
   if (error) throw error;
   return (data ?? []) as unknown as Checkpoint[];
+}
+
+export async function fetchEmailLogs() {
+  const { data, error } = await supabase
+    .from("email_logs")
+    .select("*")
+    .order("sent_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as EmailLog[];
 }
 
 export async function fetchScans(limit = 500) {

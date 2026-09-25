@@ -9,6 +9,8 @@ import { ScannerSection } from "@/components/sections/ScannerSection";
 import { ImportSection } from "@/components/sections/ImportSection";
 import { AddTeamSection } from "@/components/sections/AddTeamSection";
 import { QrSection } from "@/components/sections/QrSection";
+import { EmailSection } from "@/components/sections/EmailSection";
+import { EmailLogSection } from "@/components/sections/EmailLogSection";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   ssr: false,
@@ -116,6 +118,12 @@ function DashboardPage() {
       </Section>
       <Section title="QR Codes">
         <QrSection />
+      </Section>
+      <Section title="Email Tickets">
+        <EmailSection />
+      </Section>
+      <Section title="Email Log">
+        <EmailLogSection />
       </Section>
     </>
   );
