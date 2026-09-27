@@ -11,6 +11,7 @@ import { AddTeamSection } from "@/components/sections/AddTeamSection";
 import { QrSection } from "@/components/sections/QrSection";
 import { EmailSection } from "@/components/sections/EmailSection";
 import { EmailLogSection } from "@/components/sections/EmailLogSection";
+import { CertificatesSection } from "@/components/sections/CertificatesSection";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   ssr: false,
@@ -124,6 +125,9 @@ function DashboardPage() {
       </Section>
       <Section title="Email Log">
         <EmailLogSection />
+      </Section>
+      <Section title="Certificates">
+        <CertificatesSection />
       </Section>
     </>
   );
