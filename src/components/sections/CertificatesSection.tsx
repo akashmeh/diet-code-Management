@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Panel, LoadingState, ErrorState, StatusPill } from "@/components/ui-bits";
-import { fetchParticipantsFn, sendTestCertificateFn, sendCertificatesFn, type ParticipantRecord } from "@/lib/certificates.server";
+import { fetchParticipantsFn, sendTestCertificateFn, sendCertificatesFn, importCertificatesFn, deleteCertificatesFn, type ParticipantRecord } from "@/lib/certificates.server";
+import { readSheet } from "@/lib/spreadsheet";
 
 export function CertificatesSection() {
   const queryClient = useQueryClient();
@@ -14,6 +15,10 @@ export function CertificatesSection() {
   const [testEmail, setTestEmail] = useState("");
   const [sendingTest, setSendingTest] = useState(false);
   const [sendingBulk, setSendingBulk] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["certificates", filter],
@@ -81,6 +86,74 @@ export function CertificatesSection() {
     }
   }
 
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setImporting(true);
+    const toastId = toast.loading("Importing participants...");
+    try {
+      const buffer = await file.arrayBuffer();
+      const { rows } = readSheet(buffer);
+      
+      // Auto map loosely (looks for name and email variants)
+      const parsed = rows.map(r => {
+        let name = "";
+        let email = "";
+        for (const [k, v] of Object.entries(r)) {
+          if (!v) continue;
+          const key = k.trim().toLowerCase();
+          if (key.includes("name")) name = String(v).trim();
+          else if (key.includes("mail")) email = String(v).trim();
+        }
+        return { name, email };
+      }).filter(p => p.name && p.email);
+
+      if (parsed.length === 0) {
+        toast.error("No names and emails found in sheet.", { id: toastId });
+        return;
+      }
+
+      const res = await importCertificatesFn({ data: { participants: parsed } });
+      toast.success(`Imported ${res.imported}, Skipped ${res.failed} (duplicates)`, { id: toastId });
+      queryClient.invalidateQueries({ queryKey: ["certificates"] });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to import.", { id: toastId });
+    } finally {
+      setImporting(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  async function handleDeleteBulk() {
+    if (selectedEmails.size === 0) return toast.error("Select participants to delete.");
+    if (!confirm("Are you sure you want to delete these records? (Note: Team members will still appear as part of their teams, but imported standalone participants will be permanently removed).")) return;
+    
+    setDeleting(true);
+    const toastId = toast.loading("Deleting records...");
+    
+    // Find trackingIds for the selected emails
+    const selected = participants.filter(p => selectedEmails.has(p.participantEmail) && p.trackingId);
+    const trackingIds = selected.map(p => p.trackingId!);
+    
+    if (trackingIds.length === 0) {
+      toast.success("No tracking records to delete.", { id: toastId });
+      setDeleting(false);
+      return;
+    }
+
+    try {
+      await deleteCertificatesFn({ data: { trackingIds } });
+      toast.success(`Deleted ${trackingIds.length} records.`, { id: toastId });
+      queryClient.invalidateQueries({ queryKey: ["certificates"] });
+      setSelectedEmails(new Set());
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete.", { id: toastId });
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Test Send Form */}
@@ -119,7 +192,7 @@ export function CertificatesSection() {
 
       {/* Controls */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <select 
             className="rounded-md border px-3 py-1.5 text-sm"
             value={filter}
@@ -136,14 +209,37 @@ export function CertificatesSection() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <input
+            type="file"
+            accept=".xlsx,.csv"
+            className="hidden"
+            ref={fileRef}
+            onChange={handleImport}
+          />
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={importing}
+            className="rounded-md border bg-background px-3 py-1.5 text-sm font-medium hover:bg-muted disabled:opacity-50"
+          >
+            {importing ? "Importing..." : "Import from Sheet"}
+          </button>
         </div>
-        <button
-          onClick={handleSendBulk}
-          disabled={sendingBulk || selectedEmails.size === 0}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
-        >
-          {sendingBulk ? "Sending..." : `Send to Selected (${selectedEmails.size})`}
-        </button>
+        <div className="flex gap-2 items-center">
+          <button
+            onClick={handleDeleteBulk}
+            disabled={deleting || selectedEmails.size === 0}
+            className="rounded-md bg-destructive/10 text-destructive border border-destructive/20 px-4 py-2 text-sm font-medium hover:bg-destructive/20 disabled:opacity-50"
+          >
+            {deleting ? "Deleting..." : `Delete (${selectedEmails.size})`}
+          </button>
+          <button
+            onClick={handleSendBulk}
+            disabled={sendingBulk || selectedEmails.size === 0}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          >
+            {sendingBulk ? "Sending..." : `Send to Selected (${selectedEmails.size})`}
+          </button>
+        </div>
       </div>
 
       {/* Table */}

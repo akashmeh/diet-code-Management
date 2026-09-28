@@ -46,10 +46,13 @@ export const fetchParticipantsFn = createServerFn({ method: "GET" })
 
     const trackingMap = new Map();
     for (const t of tracking || []) {
-      trackingMap.set(`${t.team_uuid}_${t.participant_email}`, t);
+      // Key by team_uuid_email or just email if standalone
+      const key = t.team_uuid ? `${t.team_uuid}_${t.participant_email}` : `standalone_${t.participant_email}`;
+      trackingMap.set(key, t);
     }
 
     const participants: ParticipantRecord[] = [];
+    const processedTrackingIds = new Set();
 
     // Combine teams and their members into flat participants array
     for (const team of teams || []) {
@@ -68,6 +71,8 @@ export const fetchParticipantsFn = createServerFn({ method: "GET" })
 
       for (const m of allMembers) {
         const track = trackingMap.get(`${team.id}_${m.email}`);
+        if (track) processedTrackingIds.add(track.id);
+        
         participants.push({
           trackingId: track?.id,
           teamId: team.team_id,
@@ -79,6 +84,24 @@ export const fetchParticipantsFn = createServerFn({ method: "GET" })
           certificateSent: track?.certificate_sent || false,
           certificateSentAt: track?.certificate_sent_at,
           certificateSendError: track?.certificate_send_error,
+        });
+      }
+    }
+
+    // Include standalone imported tracking records
+    for (const t of tracking || []) {
+      if (!processedTrackingIds.has(t.id)) {
+        participants.push({
+          trackingId: t.id,
+          teamId: t.team_uuid ? "—" : "Imported",
+          teamUuid: t.team_uuid || "",
+          teamName: t.team_uuid ? "Unknown Team" : "Imported",
+          participantName: t.participant_name,
+          participantEmail: t.participant_email,
+          isCheckedIn: true, // Imported are generally considered attended
+          certificateSent: t.certificate_sent || false,
+          certificateSentAt: t.certificate_sent_at,
+          certificateSendError: t.certificate_send_error,
         });
       }
     }
@@ -101,7 +124,14 @@ async function generateCertificatePdf(name: string): Promise<Buffer> {
   }
   const templateBuffer = fs.readFileSync(templatePath);
   const pdfDoc = await PDFDocument.load(templateBuffer);
-  const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  
+  const fontPath = path.resolve(process.cwd(), "src/assets/Poppins-Medium.ttf");
+  if (!fs.existsSync(fontPath)) {
+    throw new Error("Poppins-Medium.ttf not found in src/assets");
+  }
+  const fontBytes = fs.readFileSync(fontPath);
+  pdfDoc.registerFontkit(await import('@pdf-lib/fontkit').then(m => m.default || m));
+  const font = await pdfDoc.embedFont(fontBytes);
   const pages = pdfDoc.getPages();
   const firstPage = pages[0];
   const { width } = firstPage.getSize();
@@ -246,3 +276,49 @@ export const sendCertificatesFn = createServerFn({ method: "POST" })
 
     return { sent, failed, results };
   });
+
+export const importCertificatesFn = createServerFn({ method: "POST" })
+  .validator((data: { participants: { name: string; email: string }[] }) => data)
+  .handler(async ({ data: { participants } }) => {
+    let imported = 0;
+    let failed = 0;
+    
+    for (const p of participants) {
+      if (!p.name || !p.email) {
+        failed++;
+        continue;
+      }
+      const { error } = await supabase
+        .from("certificate_tracking")
+        .insert({
+          participant_name: p.name,
+          participant_email: p.email,
+          certificate_sent: false,
+          team_uuid: null,
+        });
+      
+      if (error) {
+        if (error.code === "23505") {
+          failed++; // Just a duplicate
+        } else {
+          throw new Error(`Database error: ${error.message} (Code: ${error.code})`);
+        }
+      } else {
+        imported++;
+      }
+    }
+    return { imported, failed };
+  });
+
+export const deleteCertificatesFn = createServerFn({ method: "POST" })
+  .validator((data: { trackingIds: string[] }) => data)
+  .handler(async ({ data: { trackingIds } }) => {
+    if (!trackingIds.length) return { success: true };
+    const { error } = await supabase
+      .from("certificate_tracking")
+      .delete()
+      .in("id", trackingIds);
+    if (error) throw new Error(error.message);
+    return { success: true };
+  });
+
